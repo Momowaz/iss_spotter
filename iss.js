@@ -18,7 +18,8 @@ const fetchMyIP = function (callback) {
 
         if (response.statusCode !== 200) {
             const msg = `Status code ${response.statusCode} when fetching IP. Response: ${body}`;
-            callback(Error(msg), null);
+            //callback(Error(msg), null);
+            return;
         }
         callback(null, JSON.parse(body).ip);
     });
@@ -72,4 +73,26 @@ const fetchISSFlyOverTimes = function (coords, callback) {
         });
 }
 
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+const nextISSTimesForMyLocation = function (callback) {
+    fetchMyIP((error, ip) => {
+        if (error) {
+            return callback(error, null);
+        }
+
+        fetchCoordsByIP(ip, (error, loc) => {
+            if (error) {
+                return callback(error, null);
+            }
+
+            fetchISSFlyOverTimes(loc, (error, nextPasses) => {
+                if (error) {
+                    return callback(error, null);
+                }
+
+                callback(null, nextPasses);
+            });
+        })
+    })
+}
+
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocation };
